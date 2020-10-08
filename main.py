@@ -47,13 +47,15 @@ def main():
         elif args.transmit!=None:
             #check if file exists
             f1 = open(args.transmit, "rb")
+            signal = f1.readlines()
             if args.car!=None:
                 if args.car=="subaru":
-                    signal=rolljam_subaru(f1)
+                    signal=rolljam_subaru(signal)
                 else:
                     print("Car not found")
                     exit(1)
-            updated_file=roll_transmit(args.baudrate, args.frequency, args.modulation, signal)
+            roll_transmit(args.frequency, args.baudrate, args.modulation, signal)
+            #remove first line of signal
             exit(0)
 
         else:
@@ -73,10 +75,10 @@ def rolljam(frequency, baudrate, modulation, car):
 
     print("Stop jamming...")
     #sleep(1)
-    roll_transmit(frequency, baudrate, modulation, signal[0])
+    roll_transmit(frequency, baudrate, modulation, signal)
     #remove first code from signal
     i="i"
-    while i!="e" and len(signal)>0:
+    while i!="e" and len(signal.splitlines())>0:
         i = input("You have "+str(len(signal.splitlines()))+" codes left.\nWhat would you like to do? (t)ransmit  (e)xit: ")
 
         if i=="t":
@@ -94,7 +96,7 @@ def rolljam(frequency, baudrate, modulation, car):
                 f_end.write(signal)
                 f_end.close()
 
-    if len(signal)==0:
+    if len(signal.splitlines())==0:
         print("[-] Ran out of codes")
     else:
         print("[+] Exiting")
@@ -105,7 +107,8 @@ def rolljam(frequency, baudrate, modulation, car):
 def roll_receive(frequency, baudrate, modulation):
     print("ROLL RECEIVE")
     #regex to filter out junk
-    #return signal(separate found codes by line)
+    signal="test\nreceive\nfunction"
+    return signal  #(separate found codes by line)
 
 
 #transmits one code
@@ -128,7 +131,8 @@ def rolljam_subaru(signal):
     #regex to filter to just codes for subaru
     #input("Would you like to: open (t)runk, (c)ar alarm, (l)ock, (u)nlock")
     #new_signal=code of choice+part of first line in file
-    #return new_signal
+    new_signal="test\nsubaru"
+    return new_signal
 
 
 
