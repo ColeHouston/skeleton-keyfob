@@ -57,6 +57,7 @@ def main():
                 print("[-] No codes found in "+str(args.transmit))
                 exit(1)
             if args.car!=None:
+                codes = filter(args.car, codes)
                 new_code = rolljam_car(args.car, codes[0])
                 roll_transmit(args.frequency, args.baudrate, args.modulation, new_code)
             else:
@@ -81,6 +82,7 @@ def main():
 
 
 def replay(frequency, baudrate, modulation):
+    
     print("")
     #SIMPLE RECORD AND TRANSMIT EVERYTHING RECORDED UPON PRESSING ENTER
     #cycle ys1 power
@@ -107,6 +109,7 @@ def rolljam(frequency, baudrate, modulation, car):
         if i=="t":
             less_codes=[]
             if car is not None:
+                codes = filter(car, codes)
                 new_code = rolljam_car(car, codes[0])
                 roll_transmit(frequency, baudrate, modulation, new_code)
             else:
@@ -194,6 +197,20 @@ def rolljam_car(car, code):
         print("[-] Unknown command, code will remain unchanged.")
         new_code=code
     return new_code
+
+
+#filter out any codes in a list not pertaining to the specified car
+def filter(car, codes):
+    filtered_codes=[]
+    if car=="subaru":
+        print("")
+        for c in codes:
+            #if passes regex:
+                filtered_codes.append(c)
+    else:
+        print("[-] Car not supported")
+        exit(1)
+    return filtered_codes
 
 
 
