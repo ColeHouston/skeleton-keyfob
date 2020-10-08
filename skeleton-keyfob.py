@@ -35,8 +35,8 @@ def main():
 
         #records codes and writes to file, tells how many codes written
         elif args.receive!=None:
-            signal = "test\nlines\ngo\nbrrrr"
-            #signal = roll_receive(args.frequency, args.baudrate, args.modulation)
+            #signal = "test\nlines\ngo\nbrrrr"
+            signal = roll_receive(args.frequency, args.baudrate, args.modulation)
             with open(args.receive, "w") as f1:
                 f1.write(signal)
                 f1.close()
@@ -64,7 +64,6 @@ def main():
             updated_codes = []
             for c in codes[1:]:
                 updated_codes.append(c)
-
             data=""
             for c in updated_codes:
                 data += c+"\n"
@@ -82,7 +81,9 @@ def main():
 
 
 def replay(frequency, baudrate, modulation):
-    print("REPLAY")
+    print("")
+    #SIMPLE RECORD AND TRANSMIT EVERYTHING RECORDED UPON PRESSING ENTER
+    #cycle ys1 power
 
 
 def rolljam(frequency, baudrate, modulation, car):
@@ -145,6 +146,8 @@ def roll_receive(frequency, baudrate, modulation):
     signal="test\nreceive\nfunction\none\ntwo"
     #if 0 codes received:
         #print("[-] Received 0 codes")
+        #exit(1)
+    #cycle ys1 power
     return signal  #(separate found codes by line) DO NOT SPLIT. just have \n's
 
 
@@ -154,6 +157,7 @@ def roll_transmit(frequency, baudrate, modulation, code):
     #code is a single line out of signal
     #will probably have to convert code into bits before transmitting and stuff
     #transmit code
+    #cycle ys1 power
 
 
 #prints list of supported cars
@@ -161,33 +165,34 @@ def list():
     print("Car List: \nSubaru - tested on 2010 subaru impreza")
 
 
-#filters to just codes for subaru impreza (2010),
-#then allows user to change first code in file
+#edits code sent to function to change it's functionality
 def rolljam_car(car, code):
-    c = raw_input("Would you like to: open (t)runk, (p)anic alarm, (l)ock, (u)nlock ")
+    c = raw_input("Would you like to: open (t)runk, (p)anic alarm, (l)ock, (u)nlock: ")
     #WILL PROB HAVE TO CONVERT TO BITS TO FIGURE OUT PREFIX+CODE, THEN BACK TO HEX
     if car=="subaru":
         print("SUBARU")
-        #code = regex to filter to just codes for subaru
         if c=="l":
             prefix="lock"
-            #new_code = prefix + code.parseoutprefix
+            #code=code.parse_out_prefix
+            new_code = prefix+code
         elif c=="u":
             prefix="unlock"
-            #new_code = prefix + code.parseoutprefix
+            #code=code.parse_out_prefix
+            new_code = prefix+code
         elif c=="t":
             prefix="trunk"
-            #new_code = prefix + code.parseoutprefix
+            #code=code.parse_out_prefix
+            new_code = prefix+code
         elif c=="p":
             prefix="panic"
-            #new_code = prefix + code.parseoutprefix
+            #code=code.parse_out_prefix
+            new_code = prefix+code
     else:
         print("[-] Car not supported")
         exit(1)
     if c!="l" and c!="u" and c!="t" and c!="p":
         print("[-] Unknown command, code will remain unchanged.")
         new_code=code
-    new_code=prefix+code  #testing code
     return new_code
 
 
