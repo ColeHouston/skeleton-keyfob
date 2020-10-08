@@ -13,63 +13,51 @@ def main():
     parser.add_argument("-f", "--frequency", action="store", type=str, default="315000000", help="Set the frequency to receive and transmit on")
     parser.add_argument("-m", "--modulation", action="store", type=str, default="MOD_ASK_OOK", help="Set type of (de)modulation")
 
-    parser.add_argument("-c", "--car", action="store", type=str, help="Specify a supported car type for extra functionality. Use -c list to see all supported cars (rolljam)")
-    parser.add_argument("-r", "--receive", action="store", type=str, help="Receive radio frequencies and log to file (rolljam)")
-    parser.add_argument("-t", "--transmit", action="store", type=str, help="Transmit radio frequencies from a file (rolljam)")
+    parser.add_argument("-c", "--car", action="store", type=str, help="Specify a supported car type for extra functionality. Can be used with --transmit. Use -c list to see all supported cars (rolljam)")
+    parser.add_argument("-r", "--receive", action="store", type=str, help="Receive radio frequencies and log to file. Replays one code upon ending recording (rolljam)")
+    parser.add_argument("-t", "--transmit", action="store", type=str, help="Transmit a code from a file. Can be used with --car to change the single code (rolljam)")
     args = parser.parse_args()
-    print(args)
+
+    if args.car=='list':
+        list()
+        exit(0)
 
     if args.functions=='replay':
         print("REPLAY")
-#        replay(baud, freq, mod) #will receive everything and replay everything upon enter
+#        replay(args.baudrate, args.frequency, args.moduldation) #will receive everything and replay everything upon enter
         exit(0)
 
     if args.functions=='rolljam':
-        print("ROLLJAM")
-        if args.receive!=None:
-            signal = "tes\n\n\n\ntroll\n1234" #roll_receive(baudrate, frequency, modulation)
+        #exits if attempt made to receive and transmit at same time
+        if args.receive!=None and args.transmit!=None:
+            print("You must choose between receiving or transmitting")
+            exit(1)
+
+        #records codes and writes to file, tells how many codes written
+        elif args.receive!=None:
+            signal = "test\nlines"                                               #roll_receive(args.baudrate, args.frequency, args.modulation)
             f1 = open(args.receive, "wb")
             f1.write(signal)
             f1.close()
             print("Wrote "+str(len(open(args.receive).readlines()))+" codes to "+args.receive)
             exit(0)
 
-#        if receive and file:
-#            file =open("W")
-#            file=roll_receive()
-#            file.close()
-#        elif transmit and file:
-#            file =open("R")
-#            roll_transmit(file)
-#            file.close()
-#        elif receive or transmit and not file:
-#            print("Must specify a file to use with -r or -t")
-#            exit(1)
-#        elif car=='list':
-#            list()
-#        else:
-#            print("Recording signals...")
-#            signal=roll_receive() #press enter to stop. stopping will automatically replay first code
+        #transmits a code either for a specific car (user can change code then)
+        #or just transmit next code in file (removes first line of file)
+        elif args.transmit!=None:
+            #check if file exists
+            f1 = open(args.transmit, "rb")
+            if args.car!=None:
+                if args.car=="subaru":
+                    signal=rolljam_subaru(f1)
+                else:
+                    print("Car not found")
+                    exit(1)
+            updated_file=roll_transmit(args.baudrate, args.frequency, args.modulation, signal)
+            exit(0)
 
-#            while len(signal)>0:
-#                if car == 'CAR':
-#                    signal=roll_ #{car}(signal)
-                    #ALTER SIGNAL TO REFLECT CODE WANTED. BRUTE FORCING WILL BE INCLUDED IN ROLL_CAR ITSELF
-
-                #print(f'You have [{len(signal)}] signals left.')
-#                b=input("Press 'c' to play next signal, 'f' to write remaining signals to a file, or anything else to exit")
-#                if b==c:
-#                    roll_transmit(signal)
-                    #remove first code from file, keep the rest
-#                elif b==f:
-#                    file=input("File name: ")
-#                    f=open(file, "w")
-#                    f.write( #restofsignals)
-#                    f.close()
-#                    exit(0)
-#                else:
-#                    print("Exiting...")
-#                    exit(0)
+        else:
+            rolljam(args.frequency, args.baudrate, args.modulation, args.car)
 
 
 
@@ -77,48 +65,70 @@ def replay(frequency, baudrate, modulation):
     print("REPLAY")
 
 
-def rolljam(frequency, baudrate, modulation):
+def rolljam(frequency, baudrate, modulation, car):
     print("Start your jammer...")
     #sleep(1)
-#    while True:
-#        a=input("Would you like to receive or transmit?")
-#        if a==receive:
-#            signal=rolljam_receive(freq, baud, mod)
-#        elif a==transmit:
-#            rolljam_transmit(freq, baud, mod, a)
+    signal=roll_receive(frequency, baudrate, modulation)
+    print("[+] Received "+str(len(signal.splitlines()))+" codes")
+
+    print("Stop jamming...")
+    #sleep(1)
+    roll_transmit(frequency, baudrate, modulation, signal[0])
+    #remove first code from signal
+    i="i"
+    while i!="e" and len(signal)>0:
+        i = input("You have "+str(len(signal.splitlines()))+" codes left.\nWhat would you like to do? (t)ransmit  (e)xit: ")
+
+        if i=="t":
+            if car=="subaru":
+                new_signal = roll_subaru(signal)
+                #replace first code in signal with new_signal
+            roll_transmit(frequency, baudrate, modulation, signal)
+            #remove first code from signal
+
+        elif i=="e":
+            saving = input("Would you like to save the remaining codes? (y)es  (n)o: ")
+            if saving == ("y" or "yes"):
+                filename = ("./"+input("File name: "))
+                f_end = open(filename, "wb")
+                f_end.write(signal)
+                f_end.close()
+
+    if len(signal)==0:
+        print("[-] Ran out of codes")
+    else:
+        print("[+] Exiting")
+    exit(0)
 
 
+#receives til user hits enter, then sorts codes out separated by newlines
 def roll_receive(frequency, baudrate, modulation):
     print("ROLL RECEIVE")
-    print("Stop your jammer and press ENTER to attack")
-    #regex to find first code in file and transmit it
-    #return signal(rest of codes by line)
+    #regex to filter out junk
+    #return signal(separate found codes by line)
 
 
+#transmits one code
 def roll_transmit(frequency, baudrate, modulation, signal):
     print("ROLL TRANSMIT")
-#    for code in signal:
-#        print(f'you have {len(signal)} codes left')
-#        i=input("Press 't' to transmit code or any other key to exit")
-#        if i=='t':
-#            transmit()
-#        else:
-#            exit(0)
+    #code=signal[0]
+    #transmit code
 
 
-
+#prints list of supported cars
 def list():
-    print("Car List: SUBARU yeet")
+    print("Car List: \n\nSubaru - tested on 2010 subaru impreza")
 
-def rolljam_subaru(frequency, baudrate, modulation):
+
+#filters to just codes for subaru impreza (2010),
+#then allows user to change first code in file
+def rolljam_subaru(signal):
     print("SUBARU")
-    #rolljam_receive(frequency, baudrate, modulation)
-    #open received file
-    #regex to filter out codes for subaru
+    #open received list of codes
+    #regex to filter to just codes for subaru
     #input("Would you like to: open (t)runk, (c)ar alarm, (l)ock, (u)nlock")
-    #close file, open for writing
-    #edit file to append rolling code to command code
-    print("special car function")
+    #new_signal=code of choice+part of first line in file
+    #return new_signal
 
 
 
