@@ -238,6 +238,7 @@ def roll_receive(frequency, baudrate, modulation, rsleep):
     if len(signal)==0:
         print("[-] Received 0 codes")
         exit(1)
+#    signal="code1\ncode2\ncode3\code4"
     return signal  #(separate found codes by line) DO NOT SPLIT. just have \n's
 
 
@@ -254,8 +255,8 @@ def roll_transmit(frequency, baudrate, modulation, code):
     d.setMdmDRate(baudrate)
     d.setMaxPower()
     d.lowball()
-
     #formatting
+
     binary = bin(int(code,16))[2:]
     raw_code = bitstring.BitArray(bin=(binary)).tobytes()
     #transmitting
@@ -311,7 +312,7 @@ def filter(car, codes):
             #if passes regex:  prob convert to bin first, then compare, then hex
                 filtered_codes.append(c)
 
-    if car=="camaro":
+    elif car=="camaro":
         print("Filtering codes for "+car)
         for c in codes:
             #if check for prefix with regex. prob convert to bin compare, then hex
