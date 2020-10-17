@@ -241,15 +241,13 @@ def roll_receive(frequency, baudrate, modulation, rsleep):
             codes[i] = "0"+code
         i+=1
         raw_code = ""
-        if len(code)>20:  #may need changed if smaller codes found
+        if len(code)>20 and code not in signal_list:  #may need changed if smaller codes found
             signal_list.append(code)
         signal = "\n".join(signal_list)
-    d.cleanup()
     if len(signal)==0:
         print("[-] Received 0 codes")
         exit(1)
     #print(signal)     debug
-    #TODO: add function like bash's "uniq" before returning signal
     return signal  #codes separated by newlines
 
 
