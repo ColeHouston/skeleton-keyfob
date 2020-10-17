@@ -271,7 +271,7 @@ def roll_transmit(frequency, baudrate, modulation, code):
     raw_code = bitstring.BitArray(bin=(binary)).tobytes()
     #transmitting
     print("[+] Sending code "+str(code))
-    d.RFxmit((raw_code+"\x00\x00\x00\x00\x00\x00")*100)
+    d.RFxmit((raw_code+"\x00\x00\x00\x00\x00\x00")*10)
     print("[+] Sent")
 
 
