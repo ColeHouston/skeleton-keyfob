@@ -3,7 +3,7 @@ A tool in Python used with the Yardstick One to perform replay and rolling code 
 .cs8 or .c16 sound files with locks, unlocks, etc. wanted for more models of cars to add functionality.
 
 # Installation
-It is recommended to use Ubuntu with this tool as it contains some of the correct dependencies to use with RfCat.  The tool has been created and tested on Ubuntu 18.04.
+It is recommended to use Ubuntu with this tool as it contains some of the correct dependencies to use with RfCat.  The tool has been created and tested on Ubuntu 18.04 and works with Python 2.7.  You can find additional info such as updating Yardstick One firmware and how to get RfCat to work [here](https://github.com/atlas0fd00m/rfcat)
 
 
 # Jamming
