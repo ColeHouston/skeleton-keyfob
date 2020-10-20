@@ -407,13 +407,19 @@ def filter(car, codes):
     elif car=='camaro':
         print("Filtering codes for "+car)
         for c in codes:
-            rc = re.search('100110011001100110011001100110011001100110011001100110011001100110011001100110011001100101011001010101100101100101010101100110100101011010010110[0-1]{139,146}', bin(c))
+            binarycode=bin(int(c, 16))
+            rc = re.search('100110011001100110011001100110011001100110011001100110011001100110011001100110011001100101011001010101100101100101010101100110100101011010010110[0-1]{139,146}', binarycode)
             if rc is not None:
                 #only adds filtered codes to new list
                 filtered_codes.append(hex(int(rc.group(0), 2)))
 
-#    elif car=='mustang':
-#        TODO MUSTANG filter
+    elif car=='mustang':
+        print("Filtering codes for "+car)
+        for c in codes:
+            binarycode=bin(int(c, 16))
+            rc = re.search('10011001100110011001[0]{53,59}1001100110011001[0-1]{141,144}', binarycode)
+            if rc is not None:
+                filtered_codes.append(hex(int(rc.group(0), 2)))
 
     #exit if unsupported car specified
     else:
