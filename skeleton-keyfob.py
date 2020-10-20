@@ -413,6 +413,7 @@ def filter(car, codes):
                 #only adds filtered codes to new list
                 filtered_codes.append(hex(int(rc.group(0), 2)))
 
+    #filter out by known format for 2006 mustang
     elif car=='mustang':
         print("Filtering codes for "+car)
         for c in codes:
