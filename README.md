@@ -4,11 +4,14 @@ A tool in Python used with the Yardstick One to perform replay and rolling code 
 
 # Usage
 The 'replay' attack with this tool just listens with the specified settings for everything and upon stopping the capture it will replay everything it captures once.
+
 The 'rolljam' attack is meant to be used with any jammer (hackrf, extra yardstick, raspberry pi, etc) to capture codes and replay them once jamming is completed.  Rolljam will automatically replay the first valid code captured when stopping the capture, then ask if you would like to transmit more codes or exit and save the remaining codes to a file.
 
 
 The -r / --receive flag is meant to receive codes and upon stopping the capture it will write all codes to a file.
+
 The -t / --transmit flag is used to transmit the first code from a file and remove that code from the file afterwards (can be used with -c / --car to filter out valid codes)
+
 
 The -c / --car flag can be used with the value 'list' to list all supported cars, and otherwise can be used with supported cars to either filter out codes in a list to only ones for that car and change what action those codes will perform for certain cars.  Over time support for more makes/models/years will be added
 
