@@ -279,10 +279,7 @@ def roll_receive(frequency, baudrate, modulation, rsleep, transmit, car):
     #added since yardstick one needs to be unplugged and plugged back in upon every use
     if transmit is True:
         #check if a car was specified to filter codes for
-        if car=='impreza':
-            transmit_codes = filter(car, signal)
-            transmit_code = transmit_codes[0]
-        elif car=='camaro':
+        if car is not None:
             transmit_codes = filter(car, signal)
             transmit_code = transmit_codes[0]
         else:
@@ -327,6 +324,7 @@ def list():
     print("""-----Car List-----
 impreza - tested on 2010 Subaru Impreza (filter+alter codes)
 camaro - tested on 2017 Chevrolet Camaro (filter codes)
+mustang - testong on 2006 Ford Mustang (filter codes)
 """)
 
 
@@ -406,13 +404,16 @@ def filter(car, codes):
                     filtered_codes.append(hex(int(clean_code, 2)))
 
     #if camaro specified, filter out by known format for 2017 camaro
-    elif car=="camaro":
+    elif car=='camaro':
         print("Filtering codes for "+car)
         for c in codes:
             rc = re.search('100110011001100110011001100110011001100110011001100110011001100110011001100110011001100101011001010101100101100101010101100110100101011010010110[0-1]{139,146}', bin(c))
             if rc is not None:
                 #only adds filtered codes to new list
                 filtered_codes.append(hex(int(rc.group(0), 2)))
+
+#    elif car=='mustang':
+#        TODO MUSTANG filter
 
     #exit if unsupported car specified
     else:
