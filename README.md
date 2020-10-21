@@ -2,6 +2,8 @@
 A tool in Python used with the Yardstick One to perform replay and rolling code attacks, specifically on cars.
 .cs8 or .c16 sound files with locks, unlocks, etc. wanted for more models of cars to add functionality.
 
+Note: there is a lot of random error output from the rflib library.  Especially when pressing 't' to transmit another code in the rolljam loop, an error called "NameError" will appear.  I'm still working on getting this error to not show up, but to fix the actual problem it causes simply unplug the Yardstick One, wait a couple seconds, and plug it back in.
+
 # Installation
 It is recommended to use Ubuntu with this tool as it contains some of the correct dependencies to use with RfCat.  The tool has been created and tested on Ubuntu 18.04 and works with Python 2.7.  You can find additional info such as updating Yardstick One firmware and how to get RfCat to work [here](https://github.com/atlas0fd00m/rfcat)
 
