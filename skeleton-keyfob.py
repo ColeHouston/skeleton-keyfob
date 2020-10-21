@@ -338,38 +338,36 @@ def rolljam_car(car, code):
         #iterate through filtered code to find bits used to lock/unlock/etc and change given bits to code needed. then join code back together as it needs to be
         if command=="l":
             code = bin(int(str(code), 16))
-            i=160
+            i=166
             n_code=[]
-            while i < 300:
-                if i==244:
+            while i < 304:
+                if i==246:
                     #lock bits
                     n_code.append('10101100')
-                    i=252
+                    i=254
                 else:
                     n_code.append(code[i])
                     i+=1
             joined_code = "".join(n_code)
             #recreate code with changed bits
-            full_code = (('1010'*41)+joined_code+('0'*9)+joined_code)
+            full_code = (('1010'*41)+joined_code+('0'*6)+joined_code)
             new_code = hex(int(full_code, 2))
-            #TODO fix code offset      print(joined_code)
         elif command=="u":
             code = bin(int(str(code), 16))
-            i=160
+            i=166
             n_code=[]
-            while i < 300:
-                if i==244:
+            while i < 304:
+                if i==246:
                     #unlock bits
                     n_code.append('10110010')
-                    i=252
+                    i=254
                 else:
                     n_code.append(code[i])
                     i+=1
             joined_code = "".join(n_code)
             #recreate code with changed bits
-            full_code = (('1010'*41)+joined_code+('0'*9)+joined_code)
+            full_code = (('1010'*41)+joined_code+('0'*6)+joined_code)
             new_code = hex(int(full_code, 2))
-            #TODO fix code offset      print(joined_code)
         elif command=="t":
             print("--Trunk unlock not supported for Impreza yet; code unchanged--")
             #TODO need another subaru impreza (2010) to get codes from
@@ -406,7 +404,7 @@ def filter(car, codes):
                 uc = re.search('10101010101010101101010011010100110101010100110101010010101011010100101101001100[0-1]{8}1010101010101010110011001101[0-1]{17,20}', rc.group(0))
                 if uc is not None:
                     #recreate code with 9 '0' bits in-between
-                    clean_code = (('1010'*41)+uc.group(0)+('0'*9)+uc.group(0))
+                    clean_code = (('1010'*41)+uc.group(0)+('0'*8)+uc.group(0))
                     filtered_codes.append(hex(int(clean_code, 2)))
 
     #if camaro specified, filter out by known format for 2017 camaro
@@ -426,7 +424,7 @@ def filter(car, codes):
         for c in codes[:-1]:
             #DEBUG print(c)
             binarycode=bin(int(str(c), 16))
-            rc = re.search('10011001100110011001[0]{53,59}1001100110011001[0-1]{141,144}', binarycode)
+            rc = re.search('10011001100110011001[0]{11,17}1001100110011001[0-1]{141,148}', binarycode)
             if rc is not None:
                 filtered_codes.append(hex(int(rc.group(0), 2)))
 
