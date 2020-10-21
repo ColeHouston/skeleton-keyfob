@@ -256,9 +256,7 @@ def roll_receive(frequency, baudrate, modulation, rsleep, transmit, car):
     for c in signal:
         codeline += c
         #DEBUG  print(codeline)
-    codes = re.split("fffff*", codeline)
-    #TODO Perhaps add more splitting by several 000's on top of fff's
-    #codes = re.split("0000000000000000000000000000000000*", codes1)
+    codes = re.split("fffff*|0000000000000000000000000000000000*", codeline)
 
     #formatting
     i=0
