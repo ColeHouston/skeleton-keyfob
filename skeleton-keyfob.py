@@ -68,6 +68,7 @@ def main():
                 exit(1)
             #if a car is specified then filter out codes for that car and check if the code can be altered
             if args.car!=None:
+                #print(codes) #DEBUG
                 codes = filter(args.car, codes)
                 new_code = rolljam_car(args.car, codes[0])
                 roll_transmit(args.frequency, args.baudrate, args.modulation, new_code)
@@ -278,7 +279,9 @@ def roll_receive(frequency, baudrate, modulation, rsleep, transmit, car):
     if transmit is True:
         #check if a car was specified to filter codes for
         if car is not None:
-            transmit_codes = filter(car, signal)
+            codes1 = signal.split("\n")
+            #print(codes1)
+            transmit_codes = filter(car, codes1)
             transmit_code = transmit_codes[0]
         else:
             transmit_code=signal_list[0]
@@ -422,7 +425,7 @@ def filter(car, codes):
         print("Filtering codes for "+car)
         #using [:-1] so newlines aren't included
         for c in codes[:-1]:
-            #DEBUG print(c)
+            #DEBUG print(codes)
             binarycode=bin(int(str(c), 16))
             rc = re.search('10011001100110011001[0]{11,17}1001100110011001[0-1]{141,148}', binarycode)
             if rc is not None:
