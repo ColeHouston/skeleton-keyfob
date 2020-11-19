@@ -257,7 +257,10 @@ def roll_receive(frequency, baudrate, modulation, rsleep, transmit, car):
     for c in signal:
         codeline += c
         #DEBUG  print(codeline)
-    codes = re.split("fffff*|0000000000000000000000000000000000*", codeline)
+    if car is not None:
+        codes = re.split("fffff*|0000000000000000000000000000000000*", codeline)
+    else:
+        codes = re.split("fffff*", codeline)
 
     #formatting
     i=0
@@ -327,7 +330,8 @@ def list():
     print("""-----Car List-----
 impreza - tested on 2010 Subaru Impreza (filter+alter codes)
 camaro - tested on 2017 Chevrolet Camaro (filter codes)
-mustang - testong on 2006 Ford Mustang (filter codes)
+mustang - tested on 2006 Ford Mustang (filter codes)
+nissan - tested on a TODO Nissan TODO (filter codes)
 """)
 
 
@@ -418,6 +422,15 @@ def filter(car, codes):
             rc = re.search('100110011001100110011001100110011001100110011001100110011001100110011001100110011001100101011001010101100101100101010101100110100101011010010110[0-1]{139,146}', binarycode)
             if rc is not None:
                 #only adds filtered codes to new list
+                filtered_codes.append(hex(int(rc.group(0), 2)))
+
+    #filter out by known format for x nissan x
+    elif car=='nissan':
+        print("Filtering codes for "+car)
+        for c in codes[:-1]:
+            binarycode=bin(int(c, 16))
+            rc = re.search('1001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001001[0]{250,300}[01]{240,320}', binarycode)
+            if rc is not None:
                 filtered_codes.append(hex(int(rc.group(0), 2)))
 
     #filter out by known format for 2006 mustang
